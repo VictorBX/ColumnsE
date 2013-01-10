@@ -8,6 +8,25 @@
 
 using namespace std;
 
+void matrix_traverse(vector<vector<int> >& v, int& vsize, const int& outer, const int& inner, int row, int column, const vector<vector<int> >& pm, vector<vector<block> >& bm)
+{
+    for(int i=0; i<outer; i++)
+    {
+        for(int j=0; j< inner; j++)
+        {
+            if(pm[i][j]!=-1 && pm[i+row][j+column]!=-1 && pm[i+(row*2)][j+(column*2)]!=-1)
+            {
+              if(bm[i][j].get_number() == bm[i+row][j+column].get_number() && bm[i][j].get_number()==bm[i+(row*2)][j+(column*2)].get_number())
+              {
+                v[vsize][0]=i;
+                v[vsize][1]=j;
+                vsize++;
+              }
+            }
+        }
+    }
+}
+
 int main()
 {
     // Create the main window
@@ -19,8 +38,8 @@ int main()
      sf::Texture lvl;
      sf::Sprite sprite_lvl;
      lvl.loadFromFile("sprites/level1.png");
-     //lvl.setSmooth(false);
 
+     //loading sprites
      sprite_lvl.setTexture(lvl);
      sprite_lvl.setPosition(176,0);
      sf::Rect<float> lvl_bottom = sf::Rect<float>(192,288,288,298);
@@ -58,7 +77,6 @@ int main()
      block current_2 = block();
      block current_3 = block();
      int c_num = 0;
-     //int r_num = 0;
      vector<int> rows_c(6);
      vector< vector<int> > play_matrix;
      vector< vector<block> > block_matrix;
@@ -67,7 +85,7 @@ int main()
      play_matrix.resize(lvl_rows);
      for(int i=0; i<lvl_rows; i++)
      {
-       play_matrix[i].resize(lvl_columns);
+       play_matrix[i].resize(lvl_columns,-1);
      }
 
      block_matrix.resize(lvl_rows);
@@ -76,23 +94,13 @@ int main()
        block_matrix[i].resize(lvl_columns, block());
      }
 
-     for(int i=0; i<lvl_rows; i++)
-     {
-       for(int j=0; j<lvl_columns; j++)
-       {
-         play_matrix[i][j]=-1;
-       }
-     }
-
      //creating the checking of vertical/horizontal blocks
      vector<vector<int> > hvect(20);
-     vector<vector<int> > vvect(20);
-     hvect.resize(20);
      for(int i=0; i<20; i++)
      {
         hvect[i].resize(2,-1);
      }
-     vvect.resize(20);
+     vector<vector<int> > vvect(20);
      for(int i=0; i<20; i++)
      {
         vvect[i].resize(2,-1);
@@ -136,8 +144,7 @@ int main()
             cout << endl;
           }
 
-          //Time to break them blocks that are in the play_matrix and block matrix
-        //horizontal, vertical, and diagnol (right to left and left to right)
+          //just checking
           for(int i=0; i<5; i++)
           {
             for(int j=0; j<2; j++)
@@ -155,13 +162,10 @@ int main()
         //seeing as the image should only be loaded once and the image gets
         //destroyed once it goes out of scope
         current.get_sprite().setTexture(block_img);
-        //current.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current.get_number()-1)),16,16+(16*(current.get_number()-1))));
         current.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current.get_number()-1)),16,16));
         current_2.get_sprite().setTexture(block_img);
-        //current_2.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current_2.get_number()-1)),16,16+(16*(current_2.get_number()-1))));
         current_2.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current_2.get_number()-1)),16,16));
         current_3.get_sprite().setTexture(block_img);
-        //current_3.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current_3.get_number()-1)),16,16+(16*(current_3.get_number()-1))));
         current_3.get_sprite().setTextureRect(sf::IntRect(0,0+(16*(current_3.get_number()-1)),16,16));
 
         //constantly makes my block fall
@@ -219,72 +223,18 @@ int main()
         int vsize = 0;
         int dlrsize = 0;
         int drlsize=0;
+
         //The horizontal for loop
-        for(int i=0; i<lvl_rows; i++)
-        {
-          for(int j=0; j< lvl_columns-2; j++)
-          {
-            if(play_matrix[i][j]!=-1 && play_matrix[i][j+1]!=-1 && play_matrix[i][j+2]!=-1)
-            {
-              if(block_matrix[i][j].get_number() == block_matrix[i][j+1].get_number() && block_matrix[i][j].get_number()==block_matrix[i][j+2].get_number())
-              {
-                hvect[hsize][0]=i;
-                hvect[hsize][1]=j;
-                hsize++;
-              }
-            }
-          }
-        }
+        matrix_traverse(hvect,hsize,lvl_rows,lvl_columns-2,0,1,play_matrix,block_matrix);
 
         //The vertical for loop
-        for(int i=0; i<lvl_rows-2; i++)
-        {
-          for(int j=0; j< lvl_columns; j++)
-          {
-            if(play_matrix[i][j]!=-1 && play_matrix[i+1][j]!=-1 && play_matrix[i+2][j]!=-1)
-            {
-              if(block_matrix[i][j].get_number() == block_matrix[i+1][j].get_number() && block_matrix[i][j].get_number()==block_matrix[i+2][j].get_number())
-              {
-                vvect[vsize][0]=i;
-                vvect[vsize][1]=j;
-                vsize++;
-              }
-            }
-          }
-        }
+        matrix_traverse(vvect,vsize,lvl_rows-2,lvl_columns,1,0,play_matrix,block_matrix);
 
         //Diagnol checking from the top left to bottom right
-        for(int i=0; i<lvl_rows-2; i++)
-        {
-          for(int j=0; j< lvl_columns-2; j++)
-          {
-            if(play_matrix[i][j]!=-1 && play_matrix[i+1][j+1]!=-1 && play_matrix[i+2][j+2]!=-1)
-            {
-              if(block_matrix[i][j].get_number() == block_matrix[i+1][j+1].get_number() && block_matrix[i][j].get_number()==block_matrix[i+2][j+2].get_number())
-              {
-                dlrvect[dlrsize][0]=i;
-                dlrvect[dlrsize][1]=j;
-                dlrsize++;
-              }
-            }
-          }
-        }
+        matrix_traverse(dlrvect,dlrsize,lvl_rows-2,lvl_columns-2,1,1,play_matrix,block_matrix);
 
-        for(int i=0; i<lvl_rows-2; i++)
-        {
-          for(int j=lvl_columns-1; j>1; j--)
-          {
-            if(play_matrix[i][j]!=-1 && play_matrix[i+1][j-1]!=-1 && play_matrix[i+2][j-2]!=-1)
-            {
-              if(block_matrix[i][j].get_number() == block_matrix[i+1][j-1].get_number() && block_matrix[i][j].get_number()==block_matrix[i+2][j-2].get_number())
-              {
-                drlvect[drlsize][0]=i;
-                drlvect[drlsize][1]=j;
-                drlsize++;
-              }
-            }
-          }
-        }
+        //Diagnol checking from the bottom left to top right
+        matrix_traverse(drlvect,drlsize,lvl_rows-2,lvl_columns-1,1,-1,play_matrix,block_matrix);
 
          // Process events
          sf::Event Event;
