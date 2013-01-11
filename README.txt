@@ -9,6 +9,11 @@ Requires
 --------
 SFML v2.0 API (http://www.sfml-dev.org/download.php)
 
+Controls
+--------
+- Left and Right Arrow keys to move block
+- Up Arrow key to change falling block position
+
 Progress
 --------
 - Left and Right movement of falling block
